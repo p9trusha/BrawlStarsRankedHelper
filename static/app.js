@@ -168,11 +168,13 @@ async function loadPlayer() {
   info.textContent = "Загружаю аккаунт...";
   try {
     state.owned = await api(`/api/player/${encodeURIComponent(tag)}`);
-    const ready = state.owned.brawlers.filter((b) => b.power >= 9).length;
+    const countBrawlersPower9Plus = state.owned.brawlers.filter((b) => b.power >= 9).length;
+    const countBrawlersPower11 = state.owned.brawlers.filter((b) => b.power >= 11).length;
     info.className = "ok";
     info.textContent =
       `${state.owned.name || tag}: ${state.owned.brawlers.length} бойцов, ` +
-      `${ready} с power ≥ 9.`;
+      `${countBrawlersPower9Plus} с силой ≥ 9, ` +
+      `${countBrawlersPower11} с силой 11.`;
     if (state.stats) renderRecommendation();
   } catch (e) {
     state.owned = null;
