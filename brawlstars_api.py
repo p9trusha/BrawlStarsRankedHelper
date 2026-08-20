@@ -14,7 +14,7 @@ def get_player_brawlers(tag):
         raise RuntimeError("BRAWL_STARS_TOKEN не задан. Впиши токен в файл .env")
     clean = tag.strip().lstrip("#").replace(" ", "")
     if not clean:
-        raise RuntimeError("Укажи тег игрока, например #8L2P9Q")
+        raise RuntimeError("Укажи тег игрока, например #2PR8J29GL")
     url = BASE + "/players/" + urllib.parse.quote("#" + clean)
     resp = requests.get(url, headers={"Authorization": "Bearer " + token}, timeout=30)
     if resp.status_code == 404:
