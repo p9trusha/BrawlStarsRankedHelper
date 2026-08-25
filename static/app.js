@@ -119,25 +119,45 @@ function renderRecommendation() {
     const s = byName[b.name.toUpperCase()];
     if (!s) continue;
     if (onlyMax && b.power < minPower) continue;
-    const tp = Math.min(((b.trophies || 0) / tmax) * 100, 100);
-    const score =
-      0.5 * (s.winRate || 0) +
-      0.25 * (s.pickRate || 0) +
-      0.25 * tp;
-    recs.push({ ...b, ...s, score });
+    recs.push({
+      ...b,
+      ...s,
+      tp: Math.min(((b.trophies || 0) / tmax) * 100, 100),
+    });
   }
-  recs.sort((a, b) => b.score - a.score);
-
   if (!recs.length) {
     body.innerHTML =
       '<div class="empty">Никто из твоих бойцов не попал в статистику этой карты.</div>';
     return;
   }
 
+  const norm = (v, lo, hi) => (hi > lo ? ((v - lo) / (hi - lo)) * 100 : 50);
+  const rng = (key) => {
+    let lo = Infinity;
+    let hi = -Infinity;
+    for (const r of recs) {
+      lo = Math.min(lo, r[key]);
+      hi = Math.max(hi, r[key]);
+    }
+    return [lo, hi];
+  };
+  const [wrLo, wrHi] = rng("winRate");
+  const [prLo, prHi] = rng("pickRate");
+  const [tpLo, tpHi] = rng("tp");
+  for (const r of recs) {
+    r.score =
+      0.5 * norm(r.winRate, wrLo, wrHi) +
+      0.25 * norm(r.pickRate, prLo, prHi) +
+      0.25 * norm(r.tp, tpLo, tpHi);
+  }
+  recs.sort((a, b) => b.score - a.score);
+
   const ownedCount = recs.length;
+  const topWeak = recs[0].winRate < 50;
   const table = `
     <div class="pills">
       <span class="pill">Бойцов с данными на карте: <b>${ownedCount}</b></span>
+      ${topWeak ? '<span class="pill warn-pill">Все твои бойцы на этой карте с винрейтом &lt; 50%. Лучший из доступных: <b>' + recs[0].name + "</b></span>" : ""}
       <span class="pill">Лучший выбор: <b>${recs[0].name}</b> (рейтинг ${recs[0].score.toFixed(1)})</span>
     </div>
     <label class="check">
@@ -168,7 +188,7 @@ function renderRecommendation() {
               </div>
             </td>
             <td class="num">${r.power}</td>
-            <td class="num">${fmt(r.winRate)}%</td>
+            <td class="num${r.winRate < 50 ? " bad" : ""}">${fmt(r.winRate)}%</td>
             <td class="num">${fmt(r.pickRate)}%</td>
             <td class="num">${fmt(r.starRate)}%</td>
             <td class="num">${r.trophies}</td>
@@ -178,7 +198,9 @@ function renderRecommendation() {
           .join("")}
       </tbody>
     </table>
-    <div class="note">Сортировка по рейтингу: 0.5·винрейт + 0.25·пикрейт + 0.25·наигранность (${state.statsMeta?.tierName || state.tierName}). Данные Brawl Planet.</div>`;
+    <div class="note">
+    Рейтинг = 0.5·винрейт + 0.25·пикрейт + 0.25·наигранность — все метрики нормированы (0–100) по твоему пулу на этой карте (${state.statsMeta?.tierName || state.tierName}). Винрейт ниже 50% подсвечен красным. Данные Brawl Planet.
+    </div>`;
 
   body.innerHTML = table;
   $("powerFilter").onchange = renderRecommendation;
