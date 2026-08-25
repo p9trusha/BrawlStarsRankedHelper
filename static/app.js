@@ -7,7 +7,6 @@ const state = {
   tag: "",
   selectedMap: null,
   recs: null,
-  onlyMax: true,
   openMode: null,
 };
 
@@ -120,7 +119,6 @@ async function loadRecommendation() {
     tag: state.tag,
     map: state.selectedMap.slug,
     tier: state.tier,
-    onlyMax: state.onlyMax ? "1" : "0",
   });
   try {
     const data = await api(`/api/recommend?${params}`);
@@ -151,14 +149,12 @@ function renderRecommendation() {
       ${d.topWeak ? `<span class="pill warn-pill">Все твои бойцы на этой карте с винрейтом &lt; 50%. Лучший из доступных: <b>${recs[0].name}</b></span>` : ""}
       <span class="pill">Лучший выбор: <b>${recs[0].name}</b> (рейтинг ${recs[0].score.toFixed(1)})</span>
     </div>
-    <label class="check">
-      <input type="checkbox" id="powerFilter" ${state.onlyMax ? "checked" : ""} />
-       Только бойцы с power ≥ ${d.minPower}
-    </label>
     <table>
       <thead>
         <tr>
-          <th>#</th><th>Боец</th><th class="num">Power</th>
+          <th>#</th>
+          <th>Боец</th>
+          <th class="num">Сила</th>
           <th class="num">Винрейт</th>
           <th class="num">Пикрейт</th>
           <th class="num">Star player</th>
@@ -194,10 +190,6 @@ function renderRecommendation() {
     </div>`;
 
   body.innerHTML = table;
-  $("powerFilter").onchange = () => {
-    state.onlyMax = $("powerFilter").checked;
-    loadRecommendation();
-  };
 }
 
 async function loadPlayer() {

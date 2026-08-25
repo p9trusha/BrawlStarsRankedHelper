@@ -263,15 +263,6 @@ th.num {
     margin-top: 8px;
 }
 
-label.check {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 13px;
-    margin-top: 8px;
-    cursor: pointer;
-}
-
 .tier-row {
     display: flex;
     align-items: center;
