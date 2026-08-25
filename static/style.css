@@ -128,7 +128,24 @@ button:disabled {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 2px 0;
+    width: 100%;
+    background: var(--panel2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 14px;
+    font-weight: normal;
+    text-align: left;
+}
+
+.mode-header:hover {
+    filter: brightness(1.08);
+}
+
+.mode-header .mode-name {
+    font-size: 14px;
+    font-weight: 600;
 }
 
 .mode-header img {
@@ -137,9 +154,24 @@ button:disabled {
     object-fit: contain;
 }
 
-.mode-header span {
-    font-size: 14px;
-    font-weight: 600;
+.mode-header .mode-count {
+    margin-left: auto;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: normal;
+}
+
+.mode-header .caret {
+    color: var(--muted);
+    transition: transform .15s;
+}
+
+.mode-group.collapsed .caret {
+    transform: rotate(-90deg);
+}
+
+.mode-group.collapsed .mode-grid {
+    display: none;
 }
 
 .mode-grid {

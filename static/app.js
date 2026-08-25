@@ -8,6 +8,7 @@ const state = {
   selectedMap: null,
   recs: null,
   onlyMax: true,
+  openMode: null,
 };
 
 const $ = (id) => document.getElementById(id);
@@ -64,26 +65,36 @@ function renderMaps() {
     if (last && last.mode === m.mode) last.maps.push(m);
     else groups.push({ mode: m.mode, icon: m.modeIcon, maps: [m] });
   }
+  const searching = q.length > 0;
   for (const g of groups) {
+    const expanded = searching || state.openMode === g.mode;
     const group = document.createElement("div");
-    group.className = "mode-group";
+    group.className = "mode-group" + (expanded ? "" : " collapsed");
     group.innerHTML = `
-      <div class="mode-header">
+      <button type="button" class="mode-header">
         ${g.icon ? `<img src="${g.icon}" alt="" />` : ""}
-        <span>${g.mode}</span>
-      </div>
+        <span class="mode-name">${g.mode}</span>
+        <span class="mode-count">${g.maps.length}</span>
+        <span class="caret">▾</span>
+      </button>
       <div class="mode-grid"></div>`;
-    const cards = group.querySelector(".mode-grid");
-    for (const m of g.maps) {
-      const card = document.createElement("div");
-      card.className =
-        "map-card" + (state.selectedMap?.slug === m.slug ? " active" : "");
-      card.innerHTML = `
-        <img class="map-img" src="${m.image}" alt="${m.name}" loading="lazy" />
-        <div class="map-name">${m.name}</div>`;
-      card.onclick = () => selectMap(m);
-      cards.appendChild(card);
+    if (expanded) {
+      const cards = group.querySelector(".mode-grid");
+      for (const m of g.maps) {
+        const card = document.createElement("div");
+        card.className =
+          "map-card" + (state.selectedMap?.slug === m.slug ? " active" : "");
+        card.innerHTML = `
+          <img class="map-img" src="${m.image}" alt="${m.name}" loading="lazy" />
+          <div class="map-name">${m.name}</div>`;
+        card.onclick = () => selectMap(m);
+        cards.appendChild(card);
+      }
     }
+    group.querySelector(".mode-header").onclick = () => {
+      state.openMode = state.openMode === g.mode ? null : g.mode;
+      renderMaps();
+    };
     grid.appendChild(group);
   }
 }
