@@ -95,14 +95,20 @@ function renderRecommendation() {
   for (const s of state.stats) byName[s.brawler.toUpperCase()] = s;
 
   const onlyMax = $("powerFilter") ? $("powerFilter").checked : false;
+  const tmax = Math.max(...state.owned.brawlers.map((b) => b.trophies || 0), 1);
   const recs = [];
   for (const b of state.owned.brawlers) {
     const s = byName[b.name.toUpperCase()];
     if (!s) continue;
     if (onlyMax && b.power < 11) continue;
-    recs.push({ ...b, ...s });
+    const tp = Math.min(((b.trophies || 0) / tmax) * 100, 100);
+    const score =
+      0.5 * (s.winRate || 0) +
+      0.25 * (s.pickRate || 0) +
+      0.25 * tp;
+    recs.push({ ...b, ...s, score });
   }
-  recs.sort((a, b) => b.winRate - a.winRate);
+  recs.sort((a, b) => b.score - a.score);
 
   if (!recs.length) {
     body.innerHTML =
@@ -114,7 +120,7 @@ function renderRecommendation() {
   const table = `
     <div class="pills">
       <span class="pill">Бойцов с данными на карте: <b>${ownedCount}</b></span>
-      <span class="pill">Лучший выбор: <b>${recs[0].name}</b> (${fmt(recs[0].winRate)}%)</span>
+      <span class="pill">Лучший выбор: <b>${recs[0].name}</b> (рейтинг ${recs[0].score.toFixed(1)})</span>
     </div>
     <label class="check">
       <input type="checkbox" id="powerFilter" ${onlyMax ? "checked" : ""} />
@@ -125,6 +131,7 @@ function renderRecommendation() {
         <tr>
           <th>#</th><th>Боец</th><th class="num">Power</th>
           <th class="num">Винрейт</th><th class="num">Пикрейт</th><th class="num">Star player</th>
+          <th class="num">Рейтинг</th>
         </tr>
       </thead>
       <tbody>
@@ -143,12 +150,13 @@ function renderRecommendation() {
             <td class="num">${fmt(r.winRate)}%</td>
             <td class="num">${fmt(r.pickRate)}%</td>
             <td class="num">${fmt(r.starRate)}%</td>
+            <td class="num">${r.score.toFixed(1)}</td>
           </tr>`
           )
           .join("")}
       </tbody>
     </table>
-    <div class="note">Сортировка по винрейту в ранговых матчах (${state.statsMeta?.tierName || state.tierName}) на этой карте. Данные Brawl Planet.</div>`;
+    <div class="note">Сортировка по рейтингу: 0.5·винрейт + 0.25·пикрейт + 0.25·наигранность (${state.statsMeta?.tierName || state.tierName}). Данные Brawl Planet.</div>`;
 
   body.innerHTML = table;
   $("powerFilter").onchange = renderRecommendation;
