@@ -1,5 +1,9 @@
 MIN_POWER = {"pl": 9}
 WR_SHRINK_K = 8
+BAN_WR_WEIGHT = 0.4
+BAN_PR_WEIGHT = 0.3
+BAN_TP_WEIGHT = 0.2
+BAN_LOCKED_BONUS = 25
 RANK_ICON_BASE = "https://cdn.brawlify.com/ranked/tiered"
 LEAGUE_ENTRY_RANK = {"pl": 10, "pl-m1": 13, "pl-m3": 15, "pl-l1": 16}
 
@@ -74,5 +78,46 @@ def build_recommendations(player_brawlers, stats, tier, only_max=True):
             + 0.3 * _norm(r["tp"], *ranges["tp"]),
             1,
         )
+    pool.sort(key=lambda r: r["score"], reverse=True)
+    return pool
+
+
+def build_ban_recommendations(player_brawlers, stats, tier):
+    min_power = min_power_for(tier)
+    by_name = {s["brawler"].upper(): s for s in stats}
+    tmax = max([b.get("trophies") or 0 for b in player_brawlers] + [1])
+    pool = []
+    for b in player_brawlers:
+        s = by_name.get((b.get("name") or "").upper())
+        if not s:
+            continue
+        wr = s.get("winRate") or 0
+        pr = s.get("pickRate") or 0
+        locked = (b.get("power") or 0) < min_power
+        pool.append(
+            {
+                **b,
+                **s,
+                "pickRate": pr,
+                "tp": min((b.get("trophies") or 0) / tmax * 100, 100),
+                "wrAdj": 50 + (wr - 50) * pr / (pr + WR_SHRINK_K),
+                "locked": locked,
+            }
+        )
+    if not pool:
+        return []
+    ranges = {}
+    for key in ("wrAdj", "pickRate", "tp"):
+        vals = [r[key] for r in pool]
+        ranges[key] = (min(vals), max(vals))
+    for r in pool:
+        score = (
+            BAN_WR_WEIGHT * _norm(r["wrAdj"], *ranges["wrAdj"])
+            + BAN_PR_WEIGHT * _norm(r["pickRate"], *ranges["pickRate"])
+            - BAN_TP_WEIGHT * _norm(r["tp"], *ranges["tp"])
+        )
+        if r["locked"]:
+            score += BAN_LOCKED_BONUS
+        r["score"] = round(max(score, 0.0), 1)
     pool.sort(key=lambda r: r["score"], reverse=True)
     return pool

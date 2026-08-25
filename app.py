@@ -5,7 +5,12 @@ from flask import Flask, jsonify, request, send_from_directory
 
 from brawlplanet import TIERS, get_map_entry, get_ranked_maps, stats_rows
 from brawlstars_api import get_player_brawlers
-from scoring import build_recommendations, league_icon_url, min_power_for
+from scoring import (
+    build_ban_recommendations,
+    build_recommendations,
+    league_icon_url,
+    min_power_for,
+)
 
 load_dotenv()
 
@@ -116,6 +121,49 @@ def api_recommend():
             "tierName": TIERS[tier],
             "minPower": min_power_for(tier),
             "topWeak": top_weak,
+            "recommendations": [{k: r.get(k) for k in keys} for r in recs],
+        }
+    )
+
+
+@app.get("/api/ban-recommend")
+def api_ban_recommend():
+    slug = request.args.get("map", "")
+    tag = request.args.get("tag", "")
+    if not slug or not tag:
+        return jsonify({"error": "Укажи map и tag"}), 400
+    try:
+        tier = _tier()
+        player = get_player_brawlers(tag)
+        entry = get_map_entry(tier, slug)
+        stats = stats_rows(entry)
+        recs = build_ban_recommendations(player["brawlers"], stats, tier)
+    except RuntimeError as e:
+        return jsonify({"error": str(e)}), 400
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except KeyError as e:
+        return jsonify({"error": str(e)}), 404
+    except Exception as e:
+        return jsonify({"error": f"Источник данных: {e}"}), 502
+    keys = (
+        "name",
+        "icon",
+        "power",
+        "trophies",
+        "winRate",
+        "pickRate",
+        "score",
+        "locked",
+    )
+    return jsonify(
+        {
+            "player": player.get("name"),
+            "map": entry.get("map"),
+            "mode": entry.get("modeFormatted") or entry.get("mode"),
+            "tier": tier,
+            "tierName": TIERS[tier],
+            "minPower": min_power_for(tier),
             "recommendations": [{k: r.get(k) for k in keys} for r in recs],
         }
     )
