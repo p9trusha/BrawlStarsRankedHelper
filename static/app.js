@@ -123,6 +123,7 @@ function renderRecommendation() {
       ...b,
       ...s,
       tp: Math.min(((b.trophies || 0) / tmax) * 100, 100),
+      wrAdj: 50 + ((s.winRate - 50) * s.pickRate) / (s.pickRate + 8),
     });
   }
   if (!recs.length) {
@@ -141,14 +142,12 @@ function renderRecommendation() {
     }
     return [lo, hi];
   };
-  const [wrLo, wrHi] = rng("winRate");
-  const [prLo, prHi] = rng("pickRate");
+  const [wrLo, wrHi] = rng("wrAdj");
   const [tpLo, tpHi] = rng("tp");
   for (const r of recs) {
     r.score =
-      0.5 * norm(r.winRate, wrLo, wrHi) +
-      0.25 * norm(r.pickRate, prLo, prHi) +
-      0.25 * norm(r.tp, tpLo, tpHi);
+      0.7 * norm(r.wrAdj, wrLo, wrHi) +
+      0.3 * norm(r.tp, tpLo, tpHi);
   }
   recs.sort((a, b) => b.score - a.score);
 
@@ -199,7 +198,7 @@ function renderRecommendation() {
       </tbody>
     </table>
     <div class="note">
-    Рейтинг = 0.5·винрейт + 0.25·пикрейт + 0.25·наигранность — все метрики нормированы (0–100) по твоему пулу на этой карте (${state.statsMeta?.tierName || state.tierName}). Винрейт ниже 50% подсвечен красным. Данные Brawl Planet.
+    Рейтинг = 0.7·винрейт + 0.3·наигранность (нормированы 0–100 по твоему пулу, ${state.statsMeta?.tierName || state.tierName}). Винрейт скорректирован по пикрейту: редкие пики тянутся к 50%. Винрейт ниже 50% подсвечен красным. Данные Brawl Planet.
     </div>`;
 
   body.innerHTML = table;
