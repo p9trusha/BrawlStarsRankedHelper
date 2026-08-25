@@ -25,7 +25,9 @@ async function api(url) {
 async function loadMaps() {
   const grid = $("mapGrid");
   try {
-    const data = await api(`/api/ranked-maps?tier=${encodeURIComponent(state.tier)}`);
+    const data = await api(
+      `/api/ranked-maps?tier=${encodeURIComponent(state.tier)}`,
+    );
     state.maps = data.maps || [];
     state.tierName = data.tierName || state.tier;
     if (!state.maps.length) {
@@ -46,7 +48,7 @@ function renderMaps() {
   grid.className = "";
   grid.innerHTML = "";
   const filtered = state.maps.filter(
-    (m) => m.name.toLowerCase().includes(q) || m.mode.toLowerCase().includes(q)
+    (m) => m.name.toLowerCase().includes(q) || m.mode.toLowerCase().includes(q),
   );
   if (!filtered.length) {
     grid.className = "empty";
@@ -71,7 +73,8 @@ function renderMaps() {
     const cards = group.querySelector(".mode-grid");
     for (const m of g.maps) {
       const card = document.createElement("div");
-      card.className = "map-card" + (state.selectedMap?.slug === m.slug ? " active" : "");
+      card.className =
+        "map-card" + (state.selectedMap?.slug === m.slug ? " active" : "");
       card.innerHTML = `
         <img class="map-img" src="${m.image}" alt="${m.name}" loading="lazy" />
         <div class="map-name">${m.name}</div>`;
@@ -167,7 +170,7 @@ function renderRecommendation() {
             <td class="num">${fmt(r.starRate)}%</td>
             <td class="num">${r.trophies}</td>
             <td class="num">${Number(r.score).toFixed(1)}</td>
-          </tr>`
+          </tr>`,
           )
           .join("")}
       </tbody>
@@ -200,8 +203,12 @@ async function loadPlayer() {
     state.tag = tag;
     localStorage.setItem("bsh:tag", state.tag);
     state.recs = null;
-    const countBrawlersPower9Plus = state.owned.brawlers.filter((b) => b.power >= 9).length;
-    const countBrawlersPower11 = state.owned.brawlers.filter((b) => b.power >= 11).length;
+    const countBrawlersPower9Plus = state.owned.brawlers.filter(
+      (b) => b.power >= 9,
+    ).length;
+    const countBrawlersPower11 = state.owned.brawlers.filter(
+      (b) => b.power >= 11,
+    ).length;
     info.className = "ok";
     info.textContent =
       `${state.owned.name || tag}: ${state.owned.brawlers.length} бойцов, ` +
@@ -211,7 +218,10 @@ async function loadPlayer() {
     if (ranked.name) {
       info.textContent += ` Ранг: ${ranked.name}${ranked.elo ? ` (${ranked.elo})` : ""}.`;
     }
-    if (state.owned.recommendedTier && state.owned.recommendedTier !== state.tier) {
+    if (
+      state.owned.recommendedTier &&
+      state.owned.recommendedTier !== state.tier
+    ) {
       $("tierSelect").value = state.owned.recommendedTier;
       switchTier(state.owned.recommendedTier);
       return;

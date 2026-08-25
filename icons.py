@@ -6,8 +6,12 @@ import requests
 
 BRAWLERS_URL = "https://api.brawlapi.com/v1/brawlers"
 MODES_URL = "https://api.brawlapi.com/v1/gamemodes"
-CACHE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cache", "brawlers.json")
-MODES_CACHE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cache", "modes.json")
+CACHE_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "cache", "brawlers.json"
+)
+MODES_CACHE_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "cache", "modes.json"
+)
 TTL = 7 * 24 * 3600
 HEADERS = {"User-Agent": "Mozilla/5.0 (BrawlStarsHelper/1.0)"}
 
@@ -27,7 +31,10 @@ def get_icon_map():
 
 
 def get_mode_icon_map():
-    if os.path.exists(MODES_CACHE_PATH) and time.time() - os.path.getmtime(MODES_CACHE_PATH) < TTL:
+    if (
+        os.path.exists(MODES_CACHE_PATH)
+        and time.time() - os.path.getmtime(MODES_CACHE_PATH) < TTL
+    ):
         with open(MODES_CACHE_PATH, encoding="utf-8") as f:
             return json.load(f)
     resp = requests.get(MODES_URL, headers=HEADERS, timeout=30)

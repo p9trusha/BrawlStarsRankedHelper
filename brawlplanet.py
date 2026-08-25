@@ -104,6 +104,11 @@ def get_map_entry(tier, slug):
 
 def stats_rows(entry):
     return [
-        {"brawler": r["brawler"], "winRate": r["wr"], "pickRate": r["ur"], "starRate": r["sr"]}
+        {
+            "brawler": r["brawler"],
+            "winRate": r["wr"],
+            "pickRate": r["ur"],
+            "starRate": r["sr"],
+        }
         for r in entry.get("individual", [])
     ]
