@@ -1,0 +1,13 @@
+[Unit]
+Description=ngrok tunnel (Brawl Stars Helper)
+After=network-online.target brawlstars-ranked-helper.service
+Requires=brawlstars-ranked-helper.service
+
+[Service]
+User=USER
+ExecStart=/usr/bin/ngrok http --domain=STATIC.ngrok-free.app 8000
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

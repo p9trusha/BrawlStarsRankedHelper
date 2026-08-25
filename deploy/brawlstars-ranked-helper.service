@@ -1,0 +1,14 @@
+[Unit]
+Description=Brawl Stars Ranked Helper (waitress)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=USER
+WorkingDirectory=/home/USER/BrawlStarsRankedHelper
+ExecStart=/home/USER/BrawlStarsRankedHelper/.venv/bin/waitress-serve --host=0.0.0.0 --port=8000 app:app
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
