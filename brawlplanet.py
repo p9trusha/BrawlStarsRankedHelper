@@ -6,6 +6,8 @@ import urllib.parse
 
 import requests
 
+from icons import get_mode_icon_map
+
 GCS_BASE = "https://storage.googleapis.com/brawlanalyzer-public"
 CACHE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cache")
 CACHE_TTL = 24 * 3600
@@ -41,15 +43,19 @@ def fetch_tier_results(tier="pl"):
 
 def get_ranked_maps(tier="pl"):
     results = fetch_tier_results(tier)
+    mode_icons = get_mode_icon_map()
     maps = []
     for slug, entry in results.items():
         if not entry.get("active"):
             continue
         image_key = slug.rsplit("_", 1)[0]
+        mode_slug = entry.get("mode")
         maps.append(
             {
                 "name": entry.get("map"),
-                "mode": entry.get("modeFormatted") or entry.get("mode"),
+                "mode": entry.get("modeFormatted") or mode_slug,
+                "modeSlug": mode_slug,
+                "modeIcon": mode_icons.get(mode_slug, ""),
                 "slug": slug,
                 "image": f"{GCS_BASE}/map_images/{urllib.parse.quote(image_key)}.png",
                 "matchCount": entry.get("match_count"),

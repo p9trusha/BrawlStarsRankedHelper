@@ -52,15 +52,32 @@ function renderMaps() {
     grid.textContent = "Ничего не найдено.";
     return;
   }
+  const groups = [];
   for (const m of filtered) {
-    const card = document.createElement("div");
-    card.className = "map-card" + (state.selectedMap?.slug === m.slug ? " active" : "");
-    card.innerHTML = `
-      <img class="map-img" src="${m.image}" alt="${m.name}" loading="lazy" />
-      <div class="map-name">${m.name}</div>
-      <div class="map-mode">${m.mode}</div>`;
-    card.onclick = () => selectMap(m);
-    grid.appendChild(card);
+    const last = groups[groups.length - 1];
+    if (last && last.mode === m.mode) last.maps.push(m);
+    else groups.push({ mode: m.mode, icon: m.modeIcon, maps: [m] });
+  }
+  for (const g of groups) {
+    const group = document.createElement("div");
+    group.className = "mode-group";
+    group.innerHTML = `
+      <div class="mode-header">
+        ${g.icon ? `<img src="${g.icon}" alt="" />` : ""}
+        <span>${g.mode}</span>
+      </div>
+      <div class="mode-grid"></div>`;
+    const cards = group.querySelector(".mode-grid");
+    for (const m of g.maps) {
+      const card = document.createElement("div");
+      card.className = "map-card" + (state.selectedMap?.slug === m.slug ? " active" : "");
+      card.innerHTML = `
+        <img class="map-img" src="${m.image}" alt="${m.name}" loading="lazy" />
+        <div class="map-name">${m.name}</div>`;
+      card.onclick = () => selectMap(m);
+      cards.appendChild(card);
+    }
+    grid.appendChild(group);
   }
 }
 
@@ -95,7 +112,7 @@ function renderRecommendation() {
   const byName = {};
   for (const s of state.stats) byName[s.brawler.toUpperCase()] = s;
 
-  const onlyMax = $("powerFilter") ? $("powerFilter").checked : false;
+  const onlyMax = $("powerFilter") ? $("powerFilter").checked : true;
   const tmax = Math.max(...state.owned.brawlers.map((b) => b.trophies || 0), 1);
   const recs = [];
   for (const b of state.owned.brawlers) {
