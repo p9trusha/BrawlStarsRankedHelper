@@ -5,7 +5,7 @@ import urllib.parse
 import requests
 
 from icons import get_icon_map
-from scoring import tier_for_rank
+from scoring import rank_icon_url, tier_for_rank
 
 BASE = "https://api.brawlstars.com/v1"
 PLAYER_TTL = 10 * 60
@@ -51,6 +51,7 @@ def get_player_brawlers(tag):
             "rank": data.get("rankedRank"),  # число, по нему маппинг
             "name": data.get("rankedRankName"),  # для отображения в UI
             "elo": data.get("rankedElo"),
+            "icon": rank_icon_url(data.get("rankedRank")),
         },
         "recommendedTier": tier_for_rank(data.get("rankedRank")),
     }

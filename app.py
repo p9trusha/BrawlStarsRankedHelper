@@ -5,7 +5,7 @@ from flask import Flask, jsonify, request, send_from_directory
 
 from brawlplanet import TIERS, get_map_entry, get_ranked_maps, stats_rows
 from brawlstars_api import get_player_brawlers
-from scoring import build_recommendations, min_power_for
+from scoring import build_recommendations, league_icon_url, min_power_for
 
 load_dotenv()
 
@@ -24,7 +24,15 @@ def api_ranked_maps():
     try:
         tier = _tier()
         return jsonify(
-            {"tier": tier, "tierName": TIERS[tier], "maps": get_ranked_maps(tier)}
+            {
+                "tier": tier,
+                "tierName": TIERS[tier],
+                "leagues": [
+                    {"value": t, "name": TIERS[t], "icon": league_icon_url(t)}
+                    for t in TIERS
+                ],
+                "maps": get_ranked_maps(tier),
+            }
         )
     except ValueError as e:
         return jsonify({"error": str(e)}), 400

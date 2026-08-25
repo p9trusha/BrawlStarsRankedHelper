@@ -1,6 +1,7 @@
 const state = {
   tier: "pl",
   tierName: "Diamond I+",
+  leagues: [],
   maps: [],
   owned: null,
   tag: "",
@@ -29,7 +30,9 @@ async function loadMaps() {
       `/api/ranked-maps?tier=${encodeURIComponent(state.tier)}`,
     );
     state.maps = data.maps || [];
+    state.leagues = data.leagues || [];
     state.tierName = data.tierName || state.tier;
+    renderTierDropdown();
     if (!state.maps.length) {
       grid.className = "empty";
       grid.textContent = "Карты не найдены.";
@@ -216,13 +219,19 @@ async function loadPlayer() {
       `${countBrawlersPower11} с силой 11.`;
     const ranked = state.owned.ranked || {};
     if (ranked.name) {
-      info.textContent += ` Ранг: ${ranked.name}${ranked.elo ? ` (${ranked.elo})` : ""}.`;
+      if (ranked.icon) {
+        const img = document.createElement("img");
+        img.src = ranked.icon;
+        img.alt = "";
+        img.className = "rank-icon";
+        info.append(img);
+      }
+      info.append(` Ранг: ${ranked.name}${ranked.elo ? ` (${ranked.elo})` : ""}.`);
     }
     if (
       state.owned.recommendedTier &&
       state.owned.recommendedTier !== state.tier
     ) {
-      $("tierSelect").value = state.owned.recommendedTier;
       switchTier(state.owned.recommendedTier);
       return;
     }
@@ -242,6 +251,7 @@ function switchTier(tier) {
   state.tier = tier;
   state.selectedMap = null;
   state.recs = null;
+  renderTierDropdown();
   const panel = $("recPanel");
   panel.hidden = true;
   const grid = $("mapGrid");
@@ -250,12 +260,53 @@ function switchTier(tier) {
   loadMaps();
 }
 
+function renderTierDropdown() {
+  const box = $("tierDropdown");
+  if (!state.leagues.length) return;
+  const cur =
+    state.leagues.find((l) => l.value === state.tier) || state.leagues[0];
+  box.innerHTML = `
+    <button type="button" class="dropdown-btn">
+      ${cur.icon ? `<img class="rank-icon" src="${cur.icon}" alt="" />` : ""}
+      <span>${cur.name}</span><span class="caret">▾</span>
+    </button>
+    <div class="dropdown-list">
+      ${state.leagues
+        .map(
+          (l) => `
+        <button type="button" class="dropdown-item${l.value === state.tier ? " active" : ""}" data-tier="${l.value}">
+          ${l.icon ? `<img class="rank-icon" src="${l.icon}" alt="" />` : ""}
+          <span>${l.name}</span>
+        </button>`,
+        )
+        .join("")}
+    </div>`;
+}
+
 $("loadBtn").onclick = loadPlayer;
 $("tagInput").addEventListener("keydown", (e) => {
   if (e.key === "Enter") loadPlayer();
 });
 $("mapSearch").addEventListener("input", renderMaps);
-$("tierSelect").addEventListener("change", (e) => switchTier(e.target.value));
+$("tierDropdown").addEventListener("click", (e) => {
+  const item = e.target.closest(".dropdown-item");
+  if (item) {
+    $("tierDropdown").classList.remove("open");
+    switchTier(item.dataset.tier);
+    return;
+  }
+  if (e.target.closest(".dropdown-btn")) {
+    $("tierDropdown").classList.toggle("open");
+  }
+});
+document.addEventListener("click", (e) => {
+  if (!e.target.closest("#tierDropdown")) {
+    $("tierDropdown").classList.remove("open");
+  }
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") $("tierDropdown").classList.remove("open");
+});
 
 const savedTag = localStorage.getItem("bsh:tag");
 if (savedTag) {

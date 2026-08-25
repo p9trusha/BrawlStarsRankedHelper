@@ -28,13 +28,8 @@
     <section class="panel">
       <h2>2. Карта из текущей ротации ранга</h2>
       <div class="tier-row">
-        <label class="muted" for="tierSelect">Ранговая лига:</label>
-        <select id="tierSelect">
-          <option value="pl" selected>Diamond I+</option>
-          <option value="pl-m1">Mythic I+</option>
-          <option value="pl-m3">Mythic III+</option>
-          <option value="pl-l1">Legendary I+</option>
-        </select>
+        <span class="muted">Ранговая лига:</span>
+        <div id="tierDropdown"></div>
       </div>
       <input type="text" id="mapSearch" placeholder="Поиск карты..." />
       <div id="mapGrid" class="loading">Загружаю карты...</div>

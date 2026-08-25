@@ -1,5 +1,7 @@
 MIN_POWER = {"pl": 9}
 WR_SHRINK_K = 8
+RANK_ICON_BASE = "https://cdn.brawlify.com/ranked/tiered"
+LEAGUE_ENTRY_RANK = {"pl": 10, "pl-m1": 13, "pl-m3": 15, "pl-l1": 16}
 
 
 def min_power_for(tier):
@@ -18,6 +20,21 @@ def tier_for_rank(rank):
     if r >= 13:
         return "pl-m1"
     return "pl"
+
+
+def rank_icon_url(rank):
+    try:
+        r = int(rank)
+    except (TypeError, ValueError):
+        return ""
+    return f"{RANK_ICON_BASE}/{58000000 + r - 1}.png" if r >= 1 else ""
+
+
+def league_icon_url(tier):
+    r = LEAGUE_ENTRY_RANK.get(tier)
+    if not r:
+        return ""
+    return f"{RANK_ICON_BASE}/{58000000 + r - 1}.png"
 
 
 def _norm(v, lo, hi):
