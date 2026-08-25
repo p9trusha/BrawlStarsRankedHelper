@@ -41,14 +41,42 @@ def fetch_tier_results(tier="pl"):
     return data
 
 
+def _image_ok_map(tier):
+    path = os.path.join(CACHE_DIR, f"{tier}-images.json")
+    if os.path.exists(path) and time.time() - os.path.getmtime(path) < CACHE_TTL:
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
+    return {}
+
+
+def _save_image_ok_map(tier, ok):
+    path = os.path.join(CACHE_DIR, f"{tier}-images.json")
+    os.makedirs(CACHE_DIR, exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(ok, f)
+
+
 def get_ranked_maps(tier="pl"):
     results = fetch_tier_results(tier)
     mode_icons = get_mode_icon_map()
+    img_ok = _image_ok_map(tier)
     maps = []
     for slug, entry in results.items():
         if not entry.get("active"):
             continue
         image_key = slug.rsplit("_", 1)[0]
+        if image_key not in img_ok:
+            try:
+                url = f"{GCS_BASE}/map_images/{urllib.parse.quote(image_key)}.png"
+                resp = requests.head(url, headers=HEADERS, timeout=10)
+                img_ok[image_key] = (
+                    resp.status_code == 200
+                    and "image" in resp.headers.get("content-type", "")
+                )
+            except requests.RequestException:
+                img_ok[image_key] = False
+        if not img_ok.get(image_key):
+            continue
         mode_slug = entry.get("mode")
         maps.append(
             {
@@ -61,6 +89,7 @@ def get_ranked_maps(tier="pl"):
                 "matchCount": entry.get("match_count"),
             }
         )
+    _save_image_ok_map(tier, img_ok)
     maps.sort(key=lambda m: (m["mode"] or "", m["name"] or ""))
     return maps
 
