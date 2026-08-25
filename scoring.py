@@ -6,6 +6,20 @@ def min_power_for(tier):
     return MIN_POWER.get(tier, 11)
 
 
+def tier_for_rank(rank):
+    try:
+        r = int(rank)
+    except (TypeError, ValueError):
+        r = 0
+    if r >= 16:
+        return "pl-l1"
+    if r == 15:
+        return "pl-m3"
+    if r >= 13:
+        return "pl-m1"
+    return "pl"
+
+
 def _norm(v, lo, hi):
     return (v - lo) / (hi - lo) * 100 if hi > lo else 50.0
 

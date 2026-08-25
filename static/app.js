@@ -207,6 +207,15 @@ async function loadPlayer() {
       `${state.owned.name || tag}: ${state.owned.brawlers.length} бойцов, ` +
       `${countBrawlersPower9Plus} с силой ≥ 9, ` +
       `${countBrawlersPower11} с силой 11.`;
+    const ranked = state.owned.ranked || {};
+    if (ranked.name) {
+      info.textContent += ` Ранг: ${ranked.name}${ranked.elo ? ` (${ranked.elo})` : ""}.`;
+    }
+    if (state.owned.recommendedTier && state.owned.recommendedTier !== state.tier) {
+      $("tierSelect").value = state.owned.recommendedTier;
+      switchTier(state.owned.recommendedTier);
+      return;
+    }
     if (state.selectedMap) loadRecommendation();
   } catch (e) {
     state.owned = null;
@@ -219,13 +228,8 @@ async function loadPlayer() {
   }
 }
 
-$("loadBtn").onclick = loadPlayer;
-$("tagInput").addEventListener("keydown", (e) => {
-  if (e.key === "Enter") loadPlayer();
-});
-$("mapSearch").addEventListener("input", renderMaps);
-$("tierSelect").addEventListener("change", (e) => {
-  state.tier = e.target.value;
+function switchTier(tier) {
+  state.tier = tier;
   state.selectedMap = null;
   state.recs = null;
   const panel = $("recPanel");
@@ -234,7 +238,14 @@ $("tierSelect").addEventListener("change", (e) => {
   grid.className = "loading";
   grid.textContent = "Загружаю карты...";
   loadMaps();
+}
+
+$("loadBtn").onclick = loadPlayer;
+$("tagInput").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") loadPlayer();
 });
+$("mapSearch").addEventListener("input", renderMaps);
+$("tierSelect").addEventListener("change", (e) => switchTier(e.target.value));
 
 const savedTag = localStorage.getItem("bsh:tag");
 if (savedTag) {
