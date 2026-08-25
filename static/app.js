@@ -198,6 +198,7 @@ async function loadPlayer() {
   try {
     state.owned = await api(`/api/player/${encodeURIComponent(tag)}`);
     state.tag = tag;
+    localStorage.setItem("bsh:tag", state.tag);
     state.recs = null;
     const countBrawlersPower9Plus = state.owned.brawlers.filter((b) => b.power >= 9).length;
     const countBrawlersPower11 = state.owned.brawlers.filter((b) => b.power >= 11).length;
@@ -235,4 +236,9 @@ $("tierSelect").addEventListener("change", (e) => {
   loadMaps();
 });
 
+const savedTag = localStorage.getItem("bsh:tag");
+if (savedTag) {
+  $("tagInput").value = savedTag;
+  loadPlayer();
+}
 loadMaps();
