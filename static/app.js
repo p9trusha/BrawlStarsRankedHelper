@@ -91,6 +91,7 @@ function renderRecommendation() {
       '<div class="empty">Сначала загрузи игрока в шаге 1, чтобы увидеть рекомендацию именно для твоих бойцов.</div>';
     return;
   }
+  const minPower = state.tier === "pl" ? 9 : 11;
   const byName = {};
   for (const s of state.stats) byName[s.brawler.toUpperCase()] = s;
 
@@ -100,7 +101,7 @@ function renderRecommendation() {
   for (const b of state.owned.brawlers) {
     const s = byName[b.name.toUpperCase()];
     if (!s) continue;
-    if (onlyMax && b.power < 11) continue;
+    if (onlyMax && b.power < minPower) continue;
     const tp = Math.min(((b.trophies || 0) / tmax) * 100, 100);
     const score =
       0.5 * (s.winRate || 0) +
@@ -124,7 +125,7 @@ function renderRecommendation() {
     </div>
     <label class="check">
       <input type="checkbox" id="powerFilter" ${onlyMax ? "checked" : ""} />
-       Только бойцы с power ≥ 11 (подходят для ранга)
+       Только бойцы с power ≥ ${minPower}
     </label>
     <table>
       <thead>
@@ -153,7 +154,7 @@ function renderRecommendation() {
             <td class="num">${fmt(r.winRate)}%</td>
             <td class="num">${fmt(r.pickRate)}%</td>
             <td class="num">${fmt(r.starRate)}%</td>
-            <td class="num">${fmt(r.trophies)}</td>
+            <td class="num">${r.trophies}</td>
             <td class="num">${r.score.toFixed(1)}</td>
           </tr>`
           )
