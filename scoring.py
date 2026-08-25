@@ -1,3 +1,5 @@
+from typing import Any
+
 MIN_POWER = {"pl": 9}
 WR_SHRINK_K = 8
 BAN_WR_WEIGHT = 0.4
@@ -8,11 +10,11 @@ RANK_ICON_BASE = "https://cdn.brawlify.com/ranked/tiered"
 LEAGUE_ENTRY_RANK = {"pl": 10, "pl-m1": 13, "pl-m3": 15, "pl-l1": 16}
 
 
-def min_power_for(tier):
+def min_power_for(tier: str) -> int:
     return MIN_POWER.get(tier, 11)
 
 
-def tier_for_rank(rank):
+def tier_for_rank(rank: Any) -> str:
     try:
         r = int(rank)
     except (TypeError, ValueError):
@@ -26,7 +28,7 @@ def tier_for_rank(rank):
     return "pl"
 
 
-def rank_icon_url(rank):
+def rank_icon_url(rank: Any) -> str:
     try:
         r = int(rank)
     except (TypeError, ValueError):
@@ -34,18 +36,23 @@ def rank_icon_url(rank):
     return f"{RANK_ICON_BASE}/{58000000 + r - 1}.png" if r >= 1 else ""
 
 
-def league_icon_url(tier):
+def league_icon_url(tier: str) -> str:
     r = LEAGUE_ENTRY_RANK.get(tier)
     if not r:
         return ""
     return f"{RANK_ICON_BASE}/{58000000 + r - 1}.png"
 
 
-def _norm(v, lo, hi):
+def _norm(v: float, lo: float, hi: float) -> float:
     return (v - lo) / (hi - lo) * 100 if hi > lo else 50.0
 
 
-def build_recommendations(player_brawlers, stats, tier, only_max=True):
+def build_recommendations(
+    player_brawlers: list[dict],
+    stats: list[dict],
+    tier: str,
+    only_max: bool = True,
+) -> list[dict]:
     min_power = min_power_for(tier)
     by_name = {s["brawler"].upper(): s for s in stats}
     tmax = max([b.get("trophies") or 0 for b in player_brawlers] + [1])
@@ -68,7 +75,7 @@ def build_recommendations(player_brawlers, stats, tier, only_max=True):
         )
     if not pool:
         return []
-    ranges = {}
+    ranges: dict[str, tuple[float, float]] = {}
     for key in ("wrAdj", "tp"):
         vals = [r[key] for r in pool]
         ranges[key] = (min(vals), max(vals))
@@ -82,7 +89,9 @@ def build_recommendations(player_brawlers, stats, tier, only_max=True):
     return pool
 
 
-def build_ban_recommendations(player_brawlers, stats, tier):
+def build_ban_recommendations(
+    player_brawlers: list[dict], stats: list[dict], tier: str
+) -> list[dict]:
     min_power = min_power_for(tier)
     by_name = {s["brawler"].upper(): s for s in stats}
     tmax = max([b.get("trophies") or 0 for b in player_brawlers] + [1])
@@ -106,7 +115,7 @@ def build_ban_recommendations(player_brawlers, stats, tier):
         )
     if not pool:
         return []
-    ranges = {}
+    ranges: dict[str, tuple[float, float]] = {}
     for key in ("wrAdj", "pickRate", "tp"):
         vals = [r[key] for r in pool]
         ranges[key] = (min(vals), max(vals))
