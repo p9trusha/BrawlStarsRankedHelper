@@ -1,4 +1,4 @@
-import { state, $, api } from "./core.js";
+import { state, $, api, esc } from "./core.js";
 import { renderTierDropdown } from "./dropdown.js";
 import { loadRecommendation } from "./recommendations.js";
 
@@ -50,8 +50,8 @@ export function renderMaps() {
     group.className = "mode-group" + (expanded ? "" : " collapsed");
     group.innerHTML = `
       <button type="button" class="mode-header">
-        ${g.icon ? `<img src="${g.icon}" alt="" />` : ""}
-        <span class="mode-name">${g.mode}</span>
+        ${g.icon ? `<img src="${esc(g.icon)}" alt="" />` : ""}
+        <span class="mode-name">${esc(g.mode)}</span>
         <span class="mode-count">${g.maps.length}</span>
         <span class="caret">▾</span>
       </button>
@@ -63,8 +63,8 @@ export function renderMaps() {
         card.className =
           "map-card" + (state.selectedMap?.slug === m.slug ? " active" : "");
         card.innerHTML = `
-          <img class="map-img" src="${m.image}" alt="${m.name}" loading="lazy" />
-          <div class="map-name">${m.name}</div>`;
+          <img class="map-img" src="${esc(m.image)}" alt="${esc(m.name)}" loading="lazy" />
+          <div class="map-name">${esc(m.name)}</div>`;
         card.onclick = () => selectMap(m);
         cards.appendChild(card);
       }

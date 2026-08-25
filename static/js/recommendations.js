@@ -1,7 +1,10 @@
-import { state, $, fmt, api } from "./core.js";
+import { state, $, fmt, api, esc } from "./core.js";
+
+let requestSeq = 0;
 
 export async function loadRecommendation() {
   const body = $("recBody");
+  const seq = ++requestSeq;
   if (!state.owned || !state.selectedMap) {
     body.innerHTML =
       '<div class="empty">Сначала загрузи игрока в шаге 1, чтобы увидеть рекомендацию именно для твоих бойцов.</div>';
@@ -19,11 +22,13 @@ export async function loadRecommendation() {
       : `/api/recommend?${params}`;
   try {
     const data = await api(url);
+    if (seq !== requestSeq) return;
     state.recs = data;
     if (state.mode === "ban") renderBanRecommendation();
     else renderRecommendation();
   } catch (e) {
-    body.innerHTML = `<div class="error">${e.message}</div>`;
+    if (seq !== requestSeq) return;
+    body.innerHTML = `<div class="error">${esc(e.message)}</div>`;
   }
 }
 
@@ -44,8 +49,8 @@ function renderRecommendation() {
   const table = `
     <div class="pills">
       <span class="pill">Бойцов с данными на карте: <b>${recs.length}</b></span>
-      ${d.topWeak ? `<span class="pill warn-pill">Все твои бойцы на этой карте с винрейтом &lt; 50%. Лучший из доступных: <b>${recs[0].name}</b></span>` : ""}
-      <span class="pill">Лучший выбор: <b>${recs[0].name}</b> (рейтинг ${recs[0].score.toFixed(1)})</span>
+      ${d.topWeak ? `<span class="pill warn-pill">Все твои бойцы на этой карте с винрейтом &lt; 50%. Лучший из доступных: <b>${esc(recs[0].name)}</b></span>` : ""}
+      <span class="pill">Лучший выбор: <b>${esc(recs[0].name)}</b> (рейтинг ${Number(recs[0].score).toFixed(1)})</span>
     </div>
     <table>
       <thead>
@@ -68,8 +73,8 @@ function renderRecommendation() {
             <td><span class="rank-badge">${i + 1}</span></td>
             <td>
               <div class="brawler-cell">
-                ${r.icon ? `<img src="${r.icon}" alt="${r.name}" />` : ""}
-                <span>${r.name}</span>
+                ${r.icon ? `<img src="${esc(r.icon)}" alt="${esc(r.name)}" />` : ""}
+                <span>${esc(r.name)}</span>
               </div>
             </td>
             <td class="num">${r.power}</td>
@@ -84,7 +89,7 @@ function renderRecommendation() {
       </tbody>
     </table>
     <div class="note">
-      Рейтинг = 0.7·винрейт + 0.3·наигранность (нормированы 0–100 по твоему пулу, ${d.tierName || state.tierName}). Винрейт скорректирован по пикрейту: редкие пики тянутся к 50%. Винрейт ниже 50% подсвечен красным.
+      Рейтинг = 0.7·винрейт + 0.3·наигранность (нормированы 0–100 по твоему пулу, ${esc(d.tierName || state.tierName)}). Винрейт скорректирован по пикрейту: редкие пики тянутся к 50%. Винрейт ниже 50% подсвечен красным.
     </div>`;
 
   body.innerHTML = table;
@@ -108,7 +113,7 @@ function renderBanRecommendation() {
   const table = `
     <div class="pills">
       <span class="pill">Кандидатов: <b>${recs.length}</b></span>
-      <span class="pill">Лучший бан: <b>${recs[0].name}</b> (рейтинг ${recs[0].score.toFixed(1)})</span>
+      <span class="pill">Лучший бан: <b>${esc(recs[0].name)}</b> (рейтинг ${Number(recs[0].score).toFixed(1)})</span>
       <span class="pill">Мин. сила в лиге: <b>P${minPower}</b></span>
     </div>
     <table>
@@ -131,8 +136,8 @@ function renderBanRecommendation() {
             <td><span class="rank-badge">${i + 1}</span></td>
             <td>
               <div class="brawler-cell">
-                ${r.icon ? `<img src="${r.icon}" alt="${r.name}" />` : ""}
-                <span>${r.name}</span>
+                ${r.icon ? `<img src="${esc(r.icon)}" alt="${esc(r.name)}" />` : ""}
+                <span>${esc(r.name)}</span>
                 ${r.locked ? `<span class="lock-badge">нет силы ${minPower} — бан бесплатный</span>` : ""}
               </div>
             </td>
@@ -147,7 +152,7 @@ function renderBanRecommendation() {
       </tbody>
     </table>
     <div class="note">
-      Рейтинг бана = винрейт + пикрейт − трофеи (нормированы 0–100 по твоему пулу, ${d.tierName || state.tierName}). Бан глобальный: боец исчезнет и у соперников, и у тебя. Если у бойца нет требуемой силы (P${minPower}), он получает бонус — терять его не страшно, а из чужого пула он пропадёт. Трофеи вычитаются только у бойцов с нужной силой: чем меньше наигран, тем меньше жаль терять.
+      Рейтинг бана = винрейт + пикрейт − трофеи (нормированы 0–100 по твоему пулу, ${esc(d.tierName || state.tierName)}). Бан глобальный: боец исчезнет и у соперников, и у тебя. Если у бойца нет требуемой силы (P${minPower}), он получает бонус — терять его не страшно, а из чужого пула он пропадёт. Трофеи вычитаются только у бойцов с нужной силой: чем меньше наигран, тем меньше жаль терять.
     </div>`;
 
   body.innerHTML = table;

@@ -3,6 +3,14 @@ import { loadRecommendation } from "./recommendations.js";
 import { renderMaps, loadMaps } from "./maps.js";
 import { loadPlayer, switchTier } from "./player.js";
 
+function debounce(fn, ms) {
+  let t;
+  return (...args) => {
+    clearTimeout(t);
+    t = setTimeout(() => fn(...args), ms);
+  };
+}
+
 $("loadBtn").onclick = loadPlayer;
 document.querySelectorAll(".tab-btn").forEach((btn) => {
   btn.onclick = () => {
@@ -17,7 +25,10 @@ document.querySelectorAll(".tab-btn").forEach((btn) => {
 $("tagInput").addEventListener("keydown", (e) => {
   if (e.key === "Enter") loadPlayer();
 });
-$("mapSearch").addEventListener("input", renderMaps);
+$("mapSearch").addEventListener(
+  "input",
+  debounce(() => renderMaps(), 250),
+);
 $("tierDropdown").addEventListener("click", (e) => {
   const item = e.target.closest(".dropdown-item");
   if (item) {

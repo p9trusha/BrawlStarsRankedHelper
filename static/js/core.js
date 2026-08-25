@@ -13,6 +13,18 @@ export const state = {
 
 export const $ = (id) => document.getElementById(id);
 
+const ESC_MAP = {
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  '"': "&quot;",
+  "'": "&#39;",
+};
+
+export function esc(v) {
+  return String(v ?? "").replace(/[&<>"']/g, (c) => ESC_MAP[c]);
+}
+
 export function fmt(v) {
   return v == null ? "—" : Number(v).toFixed(1);
 }
