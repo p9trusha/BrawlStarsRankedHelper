@@ -130,7 +130,10 @@ function renderRecommendation() {
       <thead>
         <tr>
           <th>#</th><th>Боец</th><th class="num">Power</th>
-          <th class="num">Винрейт</th><th class="num">Пикрейт</th><th class="num">Star player</th>
+          <th class="num">Винрейт</th>
+          <th class="num">Пикрейт</th>
+          <th class="num">Star player</th>
+          <th class="num">Трофеи</th>
           <th class="num">Рейтинг</th>
         </tr>
       </thead>
@@ -150,6 +153,7 @@ function renderRecommendation() {
             <td class="num">${fmt(r.winRate)}%</td>
             <td class="num">${fmt(r.pickRate)}%</td>
             <td class="num">${fmt(r.starRate)}%</td>
+            <td class="num">${fmt(r.trophies)}</td>
             <td class="num">${r.score.toFixed(1)}</td>
           </tr>`
           )
