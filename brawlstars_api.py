@@ -1,4 +1,5 @@
 import os
+import time
 import urllib.parse
 
 import requests
@@ -6,6 +7,8 @@ import requests
 from icons import get_icon_map
 
 BASE = "https://api.brawlstars.com/v1"
+PLAYER_TTL = 10 * 60
+_PLAYER_CACHE = {}
 
 
 def get_player_brawlers(tag):
@@ -15,6 +18,10 @@ def get_player_brawlers(tag):
     clean = tag.strip().lstrip("#").replace(" ", "")
     if not clean:
         raise RuntimeError("Укажи тег игрока, например #2PR8J29GL")
+    key = clean.upper()
+    cached = _PLAYER_CACHE.get(key)
+    if cached and time.time() - cached[0] < PLAYER_TTL:
+        return cached[1]
     url = BASE + "/players/" + urllib.parse.quote("#" + clean)
     resp = requests.get(url, headers={"Authorization": "Bearer " + token}, timeout=30)
     if resp.status_code == 404:
@@ -35,4 +42,6 @@ def get_player_brawlers(tag):
                 "icon": icon_map.get(b["name"].upper(), ""),
             }
         )
-    return {"name": data.get("name"), "tag": data.get("tag"), "brawlers": brawlers}
+    result = {"name": data.get("name"), "tag": data.get("tag"), "brawlers": brawlers}
+    _PLAYER_CACHE[key] = (time.time(), result)
+    return result

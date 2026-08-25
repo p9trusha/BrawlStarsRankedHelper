@@ -5,6 +5,7 @@ from flask import Flask, jsonify, request, send_from_directory
 
 from brawlplanet import TIERS, get_map_entry, get_ranked_maps, stats_rows
 from brawlstars_api import get_player_brawlers
+from scoring import build_recommendations, min_power_for
 
 load_dotenv()
 
@@ -69,6 +70,7 @@ def api_player(tag):
 def api_recommend():
     slug = request.args.get("map", "")
     tag = request.args.get("tag", "")
+    only_max = request.args.get("onlyMax", "1") != "0"
     if not slug or not tag:
         return jsonify({"error": "Укажи map и tag"}), 400
     try:
@@ -76,26 +78,37 @@ def api_recommend():
         player = get_player_brawlers(tag)
         entry = get_map_entry(tier, slug)
         stats = stats_rows(entry)
+        recs = build_recommendations(player["brawlers"], stats, tier, only_max)
     except RuntimeError as e:
         return jsonify({"error": str(e)}), 400
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
+    except KeyError as e:
+        return jsonify({"error": str(e)}), 404
     except Exception as e:
-        return jsonify({"error": str(e)}), 502
-    by_name = {s["brawler"].upper(): s for s in stats}
-    recommendations = []
-    for b in player["brawlers"]:
-        s = by_name.get(b["name"].upper())
-        if s:
-            recommendations.append({**b, **s})
-    recommendations.sort(key=lambda r: r["winRate"], reverse=True)
+        return jsonify({"error": f"Источник данных: {e}"}), 502
+    top_weak = bool(recs) and (recs[0].get("winRate") or 0) < 50
+    keys = (
+        "name",
+        "icon",
+        "power",
+        "rank",
+        "trophies",
+        "winRate",
+        "pickRate",
+        "starRate",
+        "score",
+    )
     return jsonify(
         {
-            "player": player["name"],
-            "map": slug,
+            "player": player.get("name"),
+            "map": entry.get("map"),
+            "mode": entry.get("modeFormatted") or entry.get("mode"),
             "tier": tier,
             "tierName": TIERS[tier],
-            "recommendations": recommendations,
+            "minPower": min_power_for(tier),
+            "topWeak": top_weak,
+            "recommendations": [{k: r.get(k) for k in keys} for r in recs],
         }
     )
 

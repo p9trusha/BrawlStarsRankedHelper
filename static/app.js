@@ -3,9 +3,10 @@ const state = {
   tierName: "Diamond I+",
   maps: [],
   owned: null,
+  tag: "",
   selectedMap: null,
-  stats: null,
-  statsMeta: null,
+  recs: null,
+  onlyMax: true,
 };
 
 const $ = (id) => document.getElementById(id);
@@ -87,14 +88,26 @@ async function selectMap(m) {
   const panel = $("recPanel");
   panel.hidden = false;
   $("recTitle").textContent = `3. Рекомендация — ${m.name} (${m.mode})`;
+  loadRecommendation();
+}
+
+async function loadRecommendation() {
   const body = $("recBody");
-  body.innerHTML = '<div class="loading">Загружаю статистику карты...</div>';
+  if (!state.owned || !state.selectedMap) {
+    body.innerHTML =
+      '<div class="empty">Сначала загрузи игрока в шаге 1, чтобы увидеть рекомендацию именно для твоих бойцов.</div>';
+    return;
+  }
+  body.innerHTML = '<div class="loading">Считаю рейтинг...</div>';
+  const params = new URLSearchParams({
+    tag: state.tag,
+    map: state.selectedMap.slug,
+    tier: state.tier,
+    onlyMax: state.onlyMax ? "1" : "0",
+  });
   try {
-    const data = await api(
-      `/api/map/${encodeURIComponent(m.slug)}/stats?tier=${encodeURIComponent(state.tier)}`
-    );
-    state.stats = data.individual || [];
-    state.statsMeta = data;
+    const data = await api(`/api/recommend?${params}`);
+    state.recs = data;
     renderRecommendation();
   } catch (e) {
     body.innerHTML = `<div class="error">${e.message}</div>`;
@@ -103,65 +116,27 @@ async function selectMap(m) {
 
 function renderRecommendation() {
   const body = $("recBody");
-  if (!state.owned) {
+  if (!state.recs) {
     body.innerHTML =
       '<div class="empty">Сначала загрузи игрока в шаге 1, чтобы увидеть рекомендацию именно для твоих бойцов.</div>';
     return;
   }
-  const minPower = state.tier === "pl" ? 9 : 11;
-  const byName = {};
-  for (const s of state.stats) byName[s.brawler.toUpperCase()] = s;
-
-  const onlyMax = $("powerFilter") ? $("powerFilter").checked : true;
-  const tmax = Math.max(...state.owned.brawlers.map((b) => b.trophies || 0), 1);
-  const recs = [];
-  for (const b of state.owned.brawlers) {
-    const s = byName[b.name.toUpperCase()];
-    if (!s) continue;
-    if (onlyMax && b.power < minPower) continue;
-    recs.push({
-      ...b,
-      ...s,
-      tp: Math.min(((b.trophies || 0) / tmax) * 100, 100),
-      wrAdj: 50 + ((s.winRate - 50) * s.pickRate) / (s.pickRate + 8),
-    });
-  }
+  const d = state.recs;
+  const recs = d.recommendations || [];
   if (!recs.length) {
     body.innerHTML =
       '<div class="empty">Никто из твоих бойцов не попал в статистику этой карты.</div>';
     return;
   }
-
-  const norm = (v, lo, hi) => (hi > lo ? ((v - lo) / (hi - lo)) * 100 : 50);
-  const rng = (key) => {
-    let lo = Infinity;
-    let hi = -Infinity;
-    for (const r of recs) {
-      lo = Math.min(lo, r[key]);
-      hi = Math.max(hi, r[key]);
-    }
-    return [lo, hi];
-  };
-  const [wrLo, wrHi] = rng("wrAdj");
-  const [tpLo, tpHi] = rng("tp");
-  for (const r of recs) {
-    r.score =
-      0.7 * norm(r.wrAdj, wrLo, wrHi) +
-      0.3 * norm(r.tp, tpLo, tpHi);
-  }
-  recs.sort((a, b) => b.score - a.score);
-
-  const ownedCount = recs.length;
-  const topWeak = recs[0].winRate < 50;
   const table = `
     <div class="pills">
-      <span class="pill">Бойцов с данными на карте: <b>${ownedCount}</b></span>
-      ${topWeak ? '<span class="pill warn-pill">Все твои бойцы на этой карте с винрейтом &lt; 50%. Лучший из доступных: <b>' + recs[0].name + "</b></span>" : ""}
+      <span class="pill">Бойцов с данными на карте: <b>${recs.length}</b></span>
+      ${d.topWeak ? `<span class="pill warn-pill">Все твои бойцы на этой карте с винрейтом &lt; 50%. Лучший из доступных: <b>${recs[0].name}</b></span>` : ""}
       <span class="pill">Лучший выбор: <b>${recs[0].name}</b> (рейтинг ${recs[0].score.toFixed(1)})</span>
     </div>
     <label class="check">
-      <input type="checkbox" id="powerFilter" ${onlyMax ? "checked" : ""} />
-       Только бойцы с power ≥ ${minPower}
+      <input type="checkbox" id="powerFilter" ${state.onlyMax ? "checked" : ""} />
+       Только бойцы с power ≥ ${d.minPower}
     </label>
     <table>
       <thead>
@@ -191,18 +166,21 @@ function renderRecommendation() {
             <td class="num">${fmt(r.pickRate)}%</td>
             <td class="num">${fmt(r.starRate)}%</td>
             <td class="num">${r.trophies}</td>
-            <td class="num">${r.score.toFixed(1)}</td>
+            <td class="num">${Number(r.score).toFixed(1)}</td>
           </tr>`
           )
           .join("")}
       </tbody>
     </table>
     <div class="note">
-    Рейтинг = 0.7·винрейт + 0.3·наигранность (нормированы 0–100 по твоему пулу, ${state.statsMeta?.tierName || state.tierName}). Винрейт скорректирован по пикрейту: редкие пики тянутся к 50%. Винрейт ниже 50% подсвечен красным. Данные Brawl Planet.
+    Рейтинг = 0.7·винрейт + 0.3·наигранность (нормированы 0–100 по твоему пулу, ${d.tierName || state.tierName}). Винрейт скорректирован по пикрейту: редкие пики тянутся к 50%. Винрейт ниже 50% подсвечен красным.
     </div>`;
 
   body.innerHTML = table;
-  $("powerFilter").onchange = renderRecommendation;
+  $("powerFilter").onchange = () => {
+    state.onlyMax = $("powerFilter").checked;
+    loadRecommendation();
+  };
 }
 
 async function loadPlayer() {
@@ -219,6 +197,8 @@ async function loadPlayer() {
   info.textContent = "Загружаю аккаунт...";
   try {
     state.owned = await api(`/api/player/${encodeURIComponent(tag)}`);
+    state.tag = tag;
+    state.recs = null;
     const countBrawlersPower9Plus = state.owned.brawlers.filter((b) => b.power >= 9).length;
     const countBrawlersPower11 = state.owned.brawlers.filter((b) => b.power >= 11).length;
     info.className = "ok";
@@ -226,9 +206,11 @@ async function loadPlayer() {
       `${state.owned.name || tag}: ${state.owned.brawlers.length} бойцов, ` +
       `${countBrawlersPower9Plus} с силой ≥ 9, ` +
       `${countBrawlersPower11} с силой 11.`;
-    if (state.stats) renderRecommendation();
+    if (state.selectedMap) loadRecommendation();
   } catch (e) {
     state.owned = null;
+    state.tag = "";
+    state.recs = null;
     info.className = "error";
     info.textContent = e.message;
   } finally {
@@ -244,8 +226,7 @@ $("mapSearch").addEventListener("input", renderMaps);
 $("tierSelect").addEventListener("change", (e) => {
   state.tier = e.target.value;
   state.selectedMap = null;
-  state.stats = null;
-  state.statsMeta = null;
+  state.recs = null;
   const panel = $("recPanel");
   panel.hidden = true;
   const grid = $("mapGrid");
