@@ -35,7 +35,7 @@ def _lock_for(path: str) -> threading.Lock:
     return lock
 
 
-def _read_json_cache(path: str) -> Any | None:
+def _read_json_cache(path: str) -> dict | None:
     try:
         age = time.time() - os.path.getmtime(path)
     except OSError:
@@ -149,7 +149,7 @@ def get_ranked_maps(tier: str = "pl") -> list[dict]:
 def get_map_entry(tier: str, slug: str) -> dict:
     results = fetch_tier_results(tier)
     entry = results.get(slug)
-    if not entry:
+    if not isinstance(entry, dict):
         raise KeyError(f"Карта {slug} не найдена в тире {TIERS[tier]}")
     return entry
 

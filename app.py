@@ -19,7 +19,10 @@ from scoring import (
 
 load_dotenv()
 
-app = Flask(__name__, static_folder="static", static_url_path="/static")
+STATIC_DIR = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "static"
+)
+app = Flask(__name__, static_folder=STATIC_DIR, static_url_path="/static")
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s %(name)s: %(message)s",
@@ -207,7 +210,7 @@ def api_ban_recommend():
 
 @app.get("/")
 def index():
-    return send_from_directory(app.static_folder, "index.html")
+    return send_from_directory(STATIC_DIR, "index.html")
 
 
 @app.get("/health")
