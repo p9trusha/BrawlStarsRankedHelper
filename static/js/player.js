@@ -3,6 +3,8 @@ import { loadRecommendation } from "./recommendations.js";
 import { renderTierDropdown } from "./dropdown.js";
 import { loadMaps } from "./maps.js";
 
+const recPanel = $("recPanel");
+
 export async function loadPlayer() {
   const info = $("playerInfo");
   const btn = $("loadBtn");
@@ -49,7 +51,9 @@ export async function loadPlayer() {
       switchTier(state.owned.recommendedTier);
       return;
     }
-    if (state.selectedMap) loadRecommendation();
+    if (state.selectedMap) {
+      loadRecommendation().catch(console.error);
+    }
   } catch (e) {
     state.owned = null;
     state.tag = "";
@@ -66,10 +70,9 @@ export function switchTier(tier) {
   state.selectedMap = null;
   state.recs = null;
   renderTierDropdown();
-  const panel = $("recPanel");
-  panel.hidden = true;
+  recPanel.hidden = true;
   const grid = $("mapGrid");
   grid.className = "loading";
   grid.textContent = "Загружаю карты...";
-  loadMaps();
+  loadMaps().catch(console.error);
 }

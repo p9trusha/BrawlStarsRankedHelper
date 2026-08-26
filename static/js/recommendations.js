@@ -1,5 +1,7 @@
 import { state, $, fmt, api, esc } from "./core.js";
 
+const recBody = $("recBody");
+
 let requestSeq = 0;
 
 export function activateMode(mode) {
@@ -10,7 +12,7 @@ export function activateMode(mode) {
 }
 
 export async function loadRecommendation() {
-  const body = $("recBody");
+  const body = recBody;
   const seq = ++requestSeq;
   if (!state.owned || !state.selectedMap) {
     body.innerHTML =
@@ -40,7 +42,7 @@ export async function loadRecommendation() {
 }
 
 function renderRecommendation() {
-  const body = $("recBody");
+  const body = recBody;
   if (!state.recs) {
     body.innerHTML =
       '<div class="empty">Сначала загрузи игрока в шаге 1, чтобы увидеть рекомендацию именно для твоих бойцов.</div>';
@@ -103,7 +105,7 @@ function renderRecommendation() {
 }
 
 function renderBanRecommendation() {
-  const body = $("recBody");
+  const body = recBody;
   if (!state.recs) {
     body.innerHTML =
       '<div class="empty">Сначала загрузи игрока в шаге 1, чтобы увидеть кандидатов на бан.</div>';

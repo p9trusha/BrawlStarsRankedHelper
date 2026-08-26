@@ -3,6 +3,9 @@ import { loadRecommendation, activateMode } from "./recommendations.js";
 import { renderMaps, loadMaps } from "./maps.js";
 import { loadPlayer, switchTier } from "./player.js";
 
+const tagInput = $("tagInput");
+const tierDropdown = $("tierDropdown");
+
 function debounce(fn, ms) {
   let t;
   return (...args) => {
@@ -16,39 +19,39 @@ document.querySelectorAll(".tab-btn").forEach((btn) => {
   btn.onclick = () => {
     if (state.mode === btn.dataset.mode) return;
     activateMode(btn.dataset.mode);
-    loadRecommendation();
+    loadRecommendation().catch(console.error);
   };
 });
-$("tagInput").addEventListener("keydown", (e) => {
-  if (e.key === "Enter") loadPlayer();
+tagInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") loadPlayer().catch(console.error);
 });
 $("mapSearch").addEventListener(
   "input",
   debounce(() => renderMaps(), 250),
 );
-$("tierDropdown").addEventListener("click", (e) => {
+tierDropdown.addEventListener("click", (e) => {
   const item = e.target.closest(".dropdown-item");
   if (item) {
-    $("tierDropdown").classList.remove("open");
+    tierDropdown.classList.remove("open");
     switchTier(item.dataset.tier);
     return;
   }
   if (e.target.closest(".dropdown-btn")) {
-    $("tierDropdown").classList.toggle("open");
+    tierDropdown.classList.toggle("open");
   }
 });
 document.addEventListener("click", (e) => {
   if (!e.target.closest("#tierDropdown")) {
-    $("tierDropdown").classList.remove("open");
+    tierDropdown.classList.remove("open");
   }
 });
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") $("tierDropdown").classList.remove("open");
+  if (e.key === "Escape") tierDropdown.classList.remove("open");
 });
 
 const savedTag = localStorage.getItem("bsh:tag");
 if (savedTag) {
-  $("tagInput").value = savedTag;
-  loadPlayer();
+  tagInput.value = savedTag;
+  loadPlayer().catch(console.error);
 }
-loadMaps();
+loadMaps().catch(console.error);

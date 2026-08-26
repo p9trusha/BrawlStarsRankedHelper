@@ -2,8 +2,10 @@ import { state, $, api, esc } from "./core.js";
 import { renderTierDropdown } from "./dropdown.js";
 import { loadRecommendation, activateMode } from "./recommendations.js";
 
+const mapGrid = $("mapGrid");
+const mapSearch = $("mapSearch");
+
 export async function loadMaps() {
-  const grid = $("mapGrid");
   try {
     const data = await api(
       `/api/ranked-maps?tier=${encodeURIComponent(state.tier)}`,
@@ -13,22 +15,21 @@ export async function loadMaps() {
     state.tierName = data.tierName || state.tier;
     renderTierDropdown();
     if (!state.maps.length) {
-      grid.className = "empty";
-      grid.textContent = "Карты не найдены.";
+      mapGrid.className = "empty";
+      mapGrid.textContent = "Карты не найдены.";
       return;
     }
     renderMaps();
   } catch (e) {
-    grid.className = "error";
-    grid.textContent = "Не удалось загрузить карты: " + e.message;
+    mapGrid.className = "error";
+    mapGrid.textContent = "Не удалось загрузить карты: " + e.message;
   }
 }
 
 export function renderMaps() {
-  const q = $("mapSearch").value.trim().toLowerCase();
-  const grid = $("mapGrid");
-  grid.className = "";
-  grid.innerHTML = "";
+  const q = mapSearch.value.trim().toLowerCase();
+  mapGrid.className = "";
+  mapGrid.innerHTML = "";
   const filtered = state.maps.filter(
     (m) => m.name.toLowerCase().includes(q) || m.mode.toLowerCase().includes(q),
   );
@@ -73,7 +74,7 @@ export function renderMaps() {
       state.openMode = state.openMode === g.mode ? null : g.mode;
       renderMaps();
     };
-    grid.appendChild(group);
+    mapGrid.appendChild(group);
   }
 }
 
@@ -84,5 +85,5 @@ async function selectMap(m) {
   const panel = $("recPanel");
   panel.hidden = false;
   $("recTitle").textContent = `3. Рекомендация — ${m.name} (${m.mode})`;
-  loadRecommendation();
+  loadRecommendation().catch(console.error);
 }
