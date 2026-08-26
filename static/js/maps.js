@@ -34,8 +34,8 @@ export function renderMaps() {
     (m) => m.name.toLowerCase().includes(q) || m.mode.toLowerCase().includes(q),
   );
   if (!filtered.length) {
-    grid.className = "empty";
-    grid.textContent = "Ничего не найдено.";
+    mapGrid.className = "empty";
+    mapGrid.textContent = "Ничего не найдено.";
     return;
   }
   const groups = [];

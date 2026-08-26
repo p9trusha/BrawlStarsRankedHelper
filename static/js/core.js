@@ -1,3 +1,29 @@
+/**
+ * @typedef {Object} MapInfo
+ * @property {string} name
+ * @property {string} mode
+ * @property {string} modeSlug
+ * @property {string} modeIcon
+ * @property {string} slug
+ * @property {string} image
+ * @property {number|null} [matchCount]
+ */
+
+/**
+ * @typedef {Object} AppState
+ * @property {string} tier
+ * @property {string} tierName
+ * @property {Array<{value: string, name: string, icon: string}>} leagues
+ * @property {MapInfo[]} maps
+ * @property {any} owned
+ * @property {string} tag
+ * @property {MapInfo|null} selectedMap
+ * @property {any} recs
+ * @property {string|null} openMode
+ * @property {"ban"|"pick"} mode
+ */
+
+/** @type {AppState} */
 export const state = {
   tier: "pl",
   tierName: "Diamond I+",
