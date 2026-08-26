@@ -2,6 +2,13 @@ import { state, $, fmt, api, esc } from "./core.js";
 
 let requestSeq = 0;
 
+export function activateMode(mode) {
+  state.mode = mode;
+  document
+    .querySelectorAll(".tab-btn")
+    .forEach((b) => b.classList.toggle("active", b.dataset.mode === mode));
+}
+
 export async function loadRecommendation() {
   const body = $("recBody");
   const seq = ++requestSeq;

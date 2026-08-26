@@ -1,5 +1,5 @@
 import { state, $ } from "./core.js";
-import { loadRecommendation } from "./recommendations.js";
+import { loadRecommendation, activateMode } from "./recommendations.js";
 import { renderMaps, loadMaps } from "./maps.js";
 import { loadPlayer, switchTier } from "./player.js";
 
@@ -15,10 +15,7 @@ $("loadBtn").onclick = loadPlayer;
 document.querySelectorAll(".tab-btn").forEach((btn) => {
   btn.onclick = () => {
     if (state.mode === btn.dataset.mode) return;
-    state.mode = btn.dataset.mode;
-    document
-      .querySelectorAll(".tab-btn")
-      .forEach((b) => b.classList.toggle("active", b === btn));
+    activateMode(btn.dataset.mode);
     loadRecommendation();
   };
 });

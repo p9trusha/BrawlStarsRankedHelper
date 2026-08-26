@@ -1,6 +1,6 @@
 import { state, $, api, esc } from "./core.js";
 import { renderTierDropdown } from "./dropdown.js";
-import { loadRecommendation } from "./recommendations.js";
+import { loadRecommendation, activateMode } from "./recommendations.js";
 
 export async function loadMaps() {
   const grid = $("mapGrid");
@@ -79,6 +79,7 @@ export function renderMaps() {
 
 async function selectMap(m) {
   state.selectedMap = m;
+  activateMode("ban");
   renderMaps();
   const panel = $("recPanel");
   panel.hidden = false;
