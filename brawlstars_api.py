@@ -19,7 +19,7 @@ _PLAYER_CACHE: TTLCache[str, dict] = TTLCache(
 )
 _CACHE_LOCK = threading.Lock()
 
-TAG_ALPHABET = frozenset("0289PYLQGRJCUV")
+TAG_ALPHABET = frozenset("0289OPYLQGRJCUV")
 
 
 def normalize_tag(tag: str) -> str:
